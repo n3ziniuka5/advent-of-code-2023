@@ -2,8 +2,6 @@ package aoc
 
 import aoc.Common.timed
 
-import scala.annotation.tailrec
-import scala.collection.mutable
 import scala.io.Source
 
 object Day2:
@@ -12,24 +10,24 @@ object Day2:
         timed("Part 1", part1(lines))
         timed("Part 2", part2(lines))
 
-    def part1(lines: List[String]): Int =
-        lines
-            .map { case s"Game $game: $drawLine" =>
-                val draws = drawLine.split(";").toList.map(_.trim).map { draw =>
-                    draw.split(",").map(_.trim).map { case s"$number $color" =>
-                        (number.toInt, color)
-                    }
+    private def parse(lines: List[String]): List[(Int, List[(String, Int)])] =
+        lines.map { case s"Game $game: $drawLine" =>
+            val draws = drawLine.split(";").toList.map(_.trim).flatMap { draw =>
+                draw.split(",").toList.map(_.trim).map { case s"$number $color" =>
+                    (color, number.toInt)
                 }
-                (game.toInt, draws)
             }
+            (game.toInt, draws)
+        }
+
+    def part1(lines: List[String]): Int =
+        parse(lines)
             .filter { (game, draws) =>
-                draws.forall { draw =>
-                    draw.forall { case (number, color) =>
-                        color match {
-                            case "red"   => number <= 12
-                            case "green" => number <= 13
-                            case "blue"  => number <= 14
-                        }
+                draws.forall { (color, number) =>
+                    color match {
+                        case "red"   => number <= 12
+                        case "green" => number <= 13
+                        case "blue"  => number <= 14
                     }
                 }
             }
@@ -37,20 +35,16 @@ object Day2:
             .sum
 
     def part2(lines: List[String]): Int =
-        lines
-            .map { case s"Game $game: $drawLine" =>
-                val draws = drawLine.split(";").toList.map(_.trim).map { draw =>
-                    draw.split(",").map(_.trim).map { case s"$number $color" =>
-                        (number.toInt, color)
-                    }
-                }
-                (game.toInt, draws)
-            }
-            .map { (game, draws) =>
-                val red   = draws.flatten.filter(_._2 == "red").map(_._1).max
-                val green = draws.flatten.filter(_._2 == "green").map(_._1).max
-                val blue  = draws.flatten.filter(_._2 == "blue").map(_._1).max
+        parse(lines).map { (game, draws) =>
+            def findMax(color: String): Int =
+                draws
+                    .collect { case (`color`, n) => n }
+                    .maxOption
+                    .getOrElse(0)
 
-                red * green * blue
-            }
-            .sum
+            val red   = findMax("red")
+            val green = findMax("green")
+            val blue  = findMax("blue")
+
+            red * green * blue
+        }.sum
