@@ -68,4 +68,4 @@ object Day3:
                 gears + (pos -> (num +: gears.getOrElse(pos, Nil)))
             }
         }
-        gears.filter(_._2.size == 2).map(_._2.product).sum
+        gears.collect { case (_, nums) if nums.sizeIs == 2 => nums.product }.sum
