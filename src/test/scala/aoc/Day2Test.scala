@@ -11,7 +11,7 @@ object Day2Test extends ZIOSpecDefault:
       "Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green",
     )
 
-    override def spec = suite("Day 1")(
+    override def spec = suite("Day 2")(
       test("Part 1")(assertTrue(Day2.part1(input) == 8)),
       test("Part 2")(assertTrue(Day2.part2(input) == 2286))
     )
