@@ -11,10 +11,11 @@ object Day6:
         timed("Part 2", part2(lines))
 
     def waysToWin(time: Long, distance: Long): Long =
-        val start = (1L to time).find { t =>
-            t * (time - t) > distance
-        }
-        time - start.get * 2 + 1
+        val targetDistance = distance + 1
+        val discriminant   = time * time - 4 * targetDistance
+        val start          = ((time - math.sqrt(discriminant)) / 2).ceil.toLong
+
+        time - start * 2 + 1
 
     def part1(lines: List[String]): Long =
         val time        = lines.head.drop("Time:".length).trim.split(" ").flatMap(_.trim.toIntOption).toList
