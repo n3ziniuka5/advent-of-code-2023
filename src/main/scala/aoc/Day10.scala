@@ -25,6 +25,26 @@ object Day10:
             }
         }.toMap
 
+    def wayUp(map: Map[Pos, Char], pos: Pos): Option[Pos] =
+        val up = pos.copy(y = pos.y - 1)
+        if map.get(up).contains('|') || map.get(up).contains('F') || map.get(up).contains('7') then Some(up)
+        else None
+
+    def wayDown(map: Map[Pos, Char], pos: Pos): Option[Pos] =
+        val down = pos.copy(y = pos.y + 1)
+        if map.get(down).contains('|') || map.get(down).contains('J') || map.get(down).contains('L') then Some(down)
+        else None
+
+    def wayLeft(map: Map[Pos, Char], pos: Pos): Option[Pos] =
+        val left = pos.copy(x = pos.x - 1)
+        if map.get(left).contains('-') || map.get(left).contains('L') || map.get(left).contains('F') then Some(left)
+        else None
+
+    def wayRight(map: Map[Pos, Char], pos: Pos): Option[Pos] =
+        val right = pos.copy(x = pos.x + 1)
+        if map.get(right).contains('-') || map.get(right).contains('J') || map.get(right).contains('7') then Some(right)
+        else None
+
     def findLoop(map: Map[Pos, Char], startingPoint: Pos): (Map[Pos, Char], List[Pos]) =
         def loop(
             currentPos: Pos,
@@ -36,114 +56,12 @@ object Day10:
             else
                 val currentDirection = map(currentPos)
                 val nextPos: List[Pos] = currentDirection match
-                    case '|' =>
-                        val up   = currentPos.copy(y = currentPos.y - 1)
-                        val down = currentPos.copy(y = currentPos.y + 1)
-                        val canGoUp =
-                            if (map.get(up).contains('|') || map.get(up).contains('F') || map.get(up).contains('7'))
-                                true
-                            else false
-                        val canGoDown =
-                            if (
-                              map.get(down).contains('|') || map.get(down).contains('J') || map.get(down).contains('L')
-                            ) true
-                            else false
-
-                        Option.when(canGoUp)(up).toList ++ Option.when(canGoDown)(down).toList
-                    case '-' =>
-                        val left  = currentPos.copy(x = currentPos.x - 1)
-                        val right = currentPos.copy(x = currentPos.x + 1)
-
-                        val canGoLeft =
-                            if (
-                              map.get(left).contains('-') || map.get(left).contains('L') || map.get(left).contains('F')
-                            ) true
-                            else false
-                        val canGoRight =
-                            if (
-                              map.get(right).contains('-') || map.get(right).contains('J') || map
-                                  .get(right)
-                                  .contains('7')
-                            ) true
-                            else false
-
-                        Option.when(canGoLeft)(left).toList ++ Option.when(canGoRight)(right).toList
-
-                    case 'L' =>
-                        currentPos.copy(x = currentPos.x + 1, y = currentPos.y + 1)
-                        val up    = currentPos.copy(y = currentPos.y - 1)
-                        val right = currentPos.copy(x = currentPos.x + 1)
-
-                        val canGoUp =
-                            if (map.get(up).contains('|') || map.get(up).contains('F') || map.get(up).contains('7'))
-                                true
-                            else false
-                        val canGoRight =
-                            if (
-                              map.get(right).contains('-') || map.get(right).contains('J') || map
-                                  .get(right)
-                                  .contains('7')
-                            ) true
-                            else false
-
-                        Option.when(canGoUp)(up).toList ++ Option.when(canGoRight)(right).toList
-
-                    case 'J' =>
-                        currentPos.copy(x = currentPos.x - 1, y = currentPos.y + 1)
-                        val up   = currentPos.copy(y = currentPos.y - 1)
-                        val left = currentPos.copy(x = currentPos.x - 1)
-
-                        val canGoUp =
-                            if (map.get(up).contains('|') || map.get(up).contains('F') || map.get(up).contains('7'))
-                                true
-                            else false
-                        val canGoLeft =
-                            if (
-                              map.get(left).contains('-') || map.get(left).contains('L') || map.get(left).contains('F')
-                            ) true
-                            else false
-
-                        Option.when(canGoUp)(up).toList ++ Option.when(canGoLeft)(left).toList
-
-                    case '7' =>
-                        currentPos.copy(x = currentPos.x - 1, y = currentPos.y - 1)
-                        val down = currentPos.copy(y = currentPos.y + 1)
-                        val left = currentPos.copy(x = currentPos.x - 1)
-
-                        val canGoDown =
-                            if (
-                              map.get(down).contains('|') || map.get(down).contains('J') || map.get(down).contains('L')
-                            ) true
-                            else false
-
-                        val canGoLeft =
-                            if (
-                              map.get(left).contains('-') || map.get(left).contains('L') || map.get(left).contains('F')
-                            ) true
-                            else false
-
-                        Option.when(canGoDown)(down).toList ++ Option.when(canGoLeft)(left).toList
-
-                    case 'F' =>
-                        currentPos.copy(x = currentPos.x + 1, y = currentPos.y - 1)
-                        val down  = currentPos.copy(y = currentPos.y + 1)
-                        val right = currentPos.copy(x = currentPos.x + 1)
-
-                        val canGoDown =
-                            if (
-                              map.get(down).contains('|') || map.get(down).contains('J') || map.get(down).contains('L')
-                            ) true
-                            else false
-
-                        val canGoRight =
-                            if (
-                              map.get(right).contains('-') || map.get(right).contains('J') || map
-                                  .get(right)
-                                  .contains('7')
-                            ) true
-                            else false
-
-                        Option.when(canGoDown)(down).toList ++ Option.when(canGoRight)(right).toList
+                    case '|' => wayUp(map, currentPos).toList ++ wayDown(map, currentPos).toList
+                    case '-' => wayLeft(map, currentPos).toList ++ wayRight(map, currentPos).toList
+                    case 'L' => wayUp(map, currentPos).toList ++ wayRight(map, currentPos).toList
+                    case 'J' => wayUp(map, currentPos).toList ++ wayLeft(map, currentPos).toList
+                    case '7' => wayDown(map, currentPos).toList ++ wayLeft(map, currentPos).toList
+                    case 'F' => wayDown(map, currentPos).toList ++ wayRight(map, currentPos).toList
 
                 if (nextPos.sizeIs == 2) {
                     nextPos.filterNot(visited.contains).headOption match
@@ -160,7 +78,7 @@ object Day10:
                     (Map.empty, Nil)
                 }
 
-        LazyList('|', '-', 'L', 'J', '7', 'F')
+        List('|', '-', 'L', 'J', '7', 'F')
             .map { startDirection =>
                 val newMap = map + (startingPoint -> startDirection)
                 loop(startingPoint, newMap, List.empty, Set.empty)
