@@ -25,9 +25,14 @@ object Day10:
             }
         }.toMap
 
-    def findLoop(map: Map[Pos, Char], startingPoint: Pos): List[Pos] =
-        def loop(currentPos: Pos, map: Map[Pos, Char], path: List[Pos], visited: Set[Pos]): List[Pos] =
-            if (currentPos == startingPoint && path.nonEmpty) path
+    def findLoop(map: Map[Pos, Char], startingPoint: Pos): (Map[Pos, Char], List[Pos]) =
+        def loop(
+            currentPos: Pos,
+            map: Map[Pos, Char],
+            path: List[Pos],
+            visited: Set[Pos]
+        ): (Map[Pos, Char], List[Pos]) =
+            if (currentPos == startingPoint && path.nonEmpty) (map, path)
             else
                 val currentDirection = map(currentPos)
                 val nextPos: List[Pos] = currentDirection match
@@ -143,17 +148,16 @@ object Day10:
                 if (nextPos.sizeIs == 2) {
                     nextPos.filterNot(visited.contains).headOption match
                         case Some(pos) =>
-                            println(s"moving to $pos")
                             val newMap = map + (currentPos -> ' ')
                             loop(pos, map, currentPos +: path, visited + currentPos)
                         case None =>
                             if (nextPos.contains(startingPoint)) {
                                 loop(startingPoint, map, currentPos +: path, visited + currentPos)
                             } else {
-                                Nil
+                                (Map.empty, Nil)
                             }
                 } else {
-                    Nil
+                    (Map.empty, Nil)
                 }
 
         LazyList('|', '-', 'L', 'J', '7', 'F')
@@ -161,7 +165,7 @@ object Day10:
                 val newMap = map + (startingPoint -> startDirection)
                 loop(startingPoint, newMap, List.empty, Set.empty)
             }
-            .find(_.nonEmpty)
+            .find(_._2.nonEmpty)
             .get
 
     def part1(lines: List[String]): Long =
@@ -169,18 +173,152 @@ object Day10:
         val startingPoint = map.find(_._2 == 'S').get._1
         val loop          = findLoop(map, startingPoint)
         // println(s"found loop $loop")
-        (loop.size + 1) / 2
+        (loop._2.size + 1) / 2
 
     enum Rotation:
         case Clockwise, CounterClockwise
 
+    enum Direction:
+        case Left, Right
+
+    enum Perspective:
+        case Up, Down, Left, Right
+
     def part2(lines: List[String]): Long =
-        val map           = parse(lines)
-        val startingPoint = map.find(_._2 == 'S').get._1
-        val loop          = findLoop(map, startingPoint)
+        val map            = parse(lines)
+        val startingPoint  = map.find(_._2 == 'S').get._1
+        val (newMap, loop) = findLoop(map, startingPoint)
+        val maxX           = newMap.keys.maxBy(_.x).x
+        val maxY           = newMap.keys.maxBy(_.y).y
+
+        val loopSet                    = loop.toSet
+        def loopForever: LazyList[Pos] = LazyList.from(loop) lazyAppendedAll loopForever
+
+        val firstWall = (for {
+            x <- 0 to loopSet.maxBy(_.x).x
+            y <- 0 to loopSet.maxBy(_.y).y
+        } yield Pos(x, y)).find(loopSet.contains).get
+
+        println(s"encountered wall for the first time at $firstWall ${newMap(firstWall)}")
+
+        val adjustedLoop = loopForever.dropWhile(_ != firstWall)
+
+        println(s"starting at ${adjustedLoop.head} going into ${adjustedLoop(1)} ${adjustedLoop(2)}")
+
+        val (direction, perspective) = if (adjustedLoop.head.x == adjustedLoop(1).x) {
+            (Direction.Right, Perspective.Down)
+        } else {
+            (Direction.Left, Perspective.Right)
+        }
+
+        println(s"will perform outer searches to the $direction from the $perspective")
+
+        def searchUntilWallHit(toSearch: List[Pos], outerPoints: Set[Pos]): Set[Pos] =
+            toSearch.headOption match
+                case Some(current) =>
+                    if (loopSet.contains(current)) searchUntilWallHit(toSearch.tail, outerPoints)
+                    else if (current.x < 0 || current.x > maxX || current.y < 0 || current.y > maxY)
+                        searchUntilWallHit(toSearch.tail, outerPoints)
+                    else
+                        val next = current.neighbors.filterNot(outerPoints.contains)
+                        searchUntilWallHit(next ++ toSearch.tail, outerPoints + current)
+                case None => outerPoints
+
+        def search(
+            positions: LazyList[Pos],
+            direction: Direction,
+            perspective: Perspective,
+            remaining: Int,
+            outerPoints: Set[Pos]
+        ): Set[Pos] =
+            if (remaining == 0) outerPoints
+            else
+                val current = positions.head
+                val next    = positions.tail.head
+
+                val newPerspective = perspective match
+                    case Perspective.Up =>
+                        if (next.x == current.x) Perspective.Up
+                        else if (next.x < current.x) Perspective.Left
+                        else if (next.x > current.x) Perspective.Right
+                        else ???
+
+                    case Perspective.Down =>
+                        if (next.x == current.x) Perspective.Down
+                        else if (next.x < current.x) Perspective.Left
+                        else if (next.x > current.x) Perspective.Right
+                        else ???
+
+                    case Perspective.Right =>
+                        if (next.y == current.y) Perspective.Right
+                        else if (next.y < current.y) Perspective.Up
+                        else if (next.y > current.y) Perspective.Down
+                        else ???
+
+                    case Perspective.Left =>
+                        if (next.y == current.y) Perspective.Left
+                        else if (next.y < current.y) Perspective.Up
+                        else if (next.y > current.y) Perspective.Down
+                        else ???
+
+                val outerPoint = (direction, perspective) match
+                    case (Direction.Left, Perspective.Right) =>
+                        newPerspective match
+                            case Perspective.Right => List(current.copy(y = current.y - 1))
+                            case Perspective.Up    => List(current.copy(y = current.y - 1))
+                            case Perspective.Down =>
+                                List(current.copy(y = current.y - 1), current.copy(x = current.x + 1))
+                            case _ => ???
+
+                    case (Direction.Left, Perspective.Left)   => List(current.copy(y = current.y + 1))
+                    case (Direction.Left, Perspective.Up)     => List(current.copy(x = current.x - 1))
+                    case (Direction.Left, Perspective.Down)   => List(current.copy(x = current.x + 1))
+                    case (Direction.Right, Perspective.Right) => List(current.copy(y = current.y + 1))
+                    case (Direction.Right, Perspective.Left)  => List(current.copy(y = current.y - 1))
+                    case (Direction.Right, Perspective.Up)    => List(current.copy(x = current.x + 1))
+                    case (Direction.Right, Perspective.Down)  => List(current.copy(x = current.x - 1))
+
+                val newOuterPoints = searchUntilWallHit(outerPoint, outerPoints)
+                println(s"completed search ${newMap(current)} at $current")
+
+                search(positions.tail, direction, newPerspective, remaining - 1, newOuterPoints)
+
+        val outerPoints = search(adjustedLoop, direction, perspective, loopSet.size, Set.empty)
+
+        println(outerPoints)
+
+        println(s"detected a total of ${outerPoints.size} outer points")
+
+        var stars = 0
+
+        val pathVisual = (for {
+            y <- 0 to newMap.keys.maxBy(_.y).y
+            x <- 0 to newMap.keys.maxBy(_.x).x
+        } yield {
+            val pos = Pos(x, y)
+            if (outerPoints.contains(pos)) '!'
+            else if (loopSet.contains(pos)) newMap(pos)
+            else
+                stars += 1
+                '*'
+        }).grouped(newMap.keys.maxBy(_.x).x + 1).map(_.mkString).mkString("\n").map {
+            case 'F' => '╔'
+            case '7' => '╗'
+            case 'J' => '╝'
+            case 'L' => '╚'
+            case '|' => '║'
+            case '-' => '═'
+            case c   => c
+        }
+
+        println(pathVisual)
+        println(s"found $stars stars")
+
+        (maxX + 1) * (maxY + 1) - outerPoints.size - loopSet.size
+
         // val loop = findLoop(map, startingPoint).reverse.tail :+ startingPoint
 
-        println(s"GOING TO LOOP ${loop(0)} ${loop(1)}")
+        /*println(s"GOING TO LOOP ${loop(0)} ${loop(1)}")
 
         val loopSet = loop.toSet
 
@@ -372,5 +510,5 @@ object Day10:
 
         println(enclosedVisual)
 
-        enclosedPoints.size
+        enclosedPoints.size*/
         // enclosedPoints.count(map(_) == '.')

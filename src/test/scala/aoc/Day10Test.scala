@@ -50,8 +50,8 @@ object Day10Test extends ZIOSpecDefault:
     )
 
     override def spec = suite("Day 10")(
-      // test("Part 1")(assertTrue(Day10.part1(input) == 8)),
-      // test("Part 2")(assertTrue(Day10.part2(inputPart2) == 4)),
+      test("Part 1")(assertTrue(Day10.part1(input) == 8)),
+      test("Part 2")(assertTrue(Day10.part2(inputPart2) == 4)),
       test("Part 2 complex 1")(assertTrue(Day10.part2(inputPart2Complex1) == 8)),
-      // test("Part 2 complex 2")(assertTrue(Day10.part2(inputPart2Complex2) == 10))
+      test("Part 2 complex 2")(assertTrue(Day10.part2(inputPart2Complex2) == 10))
     )
