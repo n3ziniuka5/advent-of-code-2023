@@ -250,12 +250,12 @@ object Day10:
             else if (loopSet.contains(pos)) newMap(pos)
             else '*'
         }).grouped(newMap.keys.maxBy(_.x).x + 1).map(_.mkString).mkString("\n").map {
-            case 'F' => '╔'
-            case '7' => '╗'
-            case 'J' => '╝'
-            case 'L' => '╚'
-            case '|' => '║'
-            case '-' => '═'
+            case 'F' => '┌'
+            case '7' => '┐'
+            case 'J' => '┘'
+            case 'L' => '└'
+            case '|' => '│'
+            case '-' => '─'
             case c   => c
         }
 
