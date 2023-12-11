@@ -42,12 +42,13 @@ object Day11:
         pairs
             .map(p => (p.head, p(1)))
             .map { case (p1, p2) =>
-                val numEmptyCols = (math.min(p1.x, p2.x) to math.max(p1.x, p2.x)).count(emptyColumns.contains)
-                val numEmptyRows = (math.min(p1.y, p2.y) to math.max(p1.y, p2.y)).count(emptyRows.contains)
+                val numEmptyCols   = (math.min(p1.x, p2.x) to math.max(p1.x, p2.x)).count(emptyColumns.contains)
+                val numEmptyRows   = (math.min(p1.y, p2.y) to math.max(p1.y, p2.y)).count(emptyRows.contains)
+                val totalExpansion = (numEmptyCols + numEmptyRows) * galaxySize
 
-                val distX = math.abs(p1.x - p2.x) + (numEmptyCols * galaxySize)
-                val distY = math.abs(p1.y - p2.y) + (numEmptyRows * galaxySize)
-                distX + distY
+                val distX = math.abs(p1.x - p2.x)
+                val distY = math.abs(p1.y - p2.y)
+                distX + distY + totalExpansion
             }
             .sum
 
@@ -57,4 +58,4 @@ object Day11:
 
     def part2(lines: List[String]): Long =
         val (map, pairs) = parse(lines)
-        solve(map, pairs, 1000000 - 1)
+        solve(map, pairs, 1000000 - 1) // we're not replacing rows/cols, we're adding additional ones
