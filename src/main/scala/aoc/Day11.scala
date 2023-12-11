@@ -44,7 +44,7 @@ object Day11:
             .map { case (p1, p2) =>
                 val numEmptyCols   = (math.min(p1.x, p2.x) to math.max(p1.x, p2.x)).count(emptyColumns.contains)
                 val numEmptyRows   = (math.min(p1.y, p2.y) to math.max(p1.y, p2.y)).count(emptyRows.contains)
-                val totalExpansion = (numEmptyCols + numEmptyRows) * galaxySize
+                val totalExpansion = (numEmptyCols + numEmptyRows) * (galaxySize - 1)
 
                 val distX = math.abs(p1.x - p2.x)
                 val distY = math.abs(p1.y - p2.y)
@@ -54,8 +54,8 @@ object Day11:
 
     def part1(lines: List[String]): Long =
         val (map, pairs) = parse(lines)
-        solve(map, pairs, 1)
+        solve(map, pairs, 2)
 
     def part2(lines: List[String]): Long =
         val (map, pairs) = parse(lines)
-        solve(map, pairs, 1000000 - 1) // we're not replacing rows/cols, we're adding additional ones
+        solve(map, pairs, 1000000)
