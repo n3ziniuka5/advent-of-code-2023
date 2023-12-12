@@ -52,7 +52,8 @@ object Day12:
                 val newLine = (line.tail, discardedLength + 1, currentBroken + 1)
                 dfs(newLine +: lines.tail, target, result)
 
-    val cache = collection.concurrent.TrieMap.empty[(String, Int), Map[Int, Int]]
+    val cache  = collection.concurrent.TrieMap.empty[(String, Int), Map[Int, Int]]
+    val cache2 = collection.concurrent.TrieMap.empty[(String, List[Int]), Option[Long]]
 
     def waysToSolve(line: String, segments: List[Int]): Option[Long] =
         if line.isEmpty && segments.isEmpty then Some(1)
@@ -61,41 +62,48 @@ object Day12:
         else if segments.isEmpty then Some(1)
         else if line.head == '.' then waysToSolve(line.tail, segments)
         else
-            val untilBroken = line.takeWhile(_ != '#')
-            val withBroken  = line.drop(untilBroken.length).takeWhile(_ != '.')
+            cache2.get((line, segments)) match
+                case Some(value) => value
+                case None =>
+                    val untilBroken = line.takeWhile(_ != '#')
+                    val withBroken  = line.drop(untilBroken.length).takeWhile(_ != '.')
 
-            val totalLine = untilBroken ++ withBroken
-            // println(s"solving $totalLine segments ${segments.head}")
+                    val totalLine = untilBroken ++ withBroken
+                    // println(s"solving $totalLine segments ${segments.head}")
 
-            val result =
-                if cache.contains((totalLine, segments.head)) then
-                    // println("CACHE HIT")
-                    cache((totalLine, segments.head))
-                else
-                    val r = dfs(
-                      List((totalLine, 0, 0)),
-                      segments.head,
-                      ZSet.empty
-                    ).toMap
-                    cache.update((totalLine, segments.head), r)
+                    val result =
+                        if cache.contains((totalLine, segments.head)) then
+                            // println("CACHE HIT")
+                            cache((totalLine, segments.head))
+                        else
+                            val r = dfs(
+                              List((totalLine, 0, 0)),
+                              segments.head,
+                              ZSet.empty
+                            ).toMap
+                            cache.update((totalLine, segments.head), r)
+                            r
+
+                    // println(s"ways to solve is $result")
+
+                    val a = result.map { case (lineSize, count) =>
+                        val remainingLineWays = waysToSolve(line.drop(lineSize), segments.tail)
+                        remainingLineWays.map(_ * count)
+                    }
+
+                    // println("solved a segment")
+
+                    // println(s"got $a")
+                    // println()
+
+                    val b = a.filter(_.nonEmpty).flatten.toList
+
+                    val r =
+                        if b.isEmpty then None
+                        else Some(b.sum)
+
+                    cache2.update((line, segments), r)
                     r
-
-            // println(s"ways to solve is $result")
-
-            val a = result.map { case (lineSize, count) =>
-                val remainingLineWays = waysToSolve(line.drop(lineSize), segments.tail)
-                remainingLineWays.map(_ * count)
-            }
-
-            // println("solved a segment")
-
-            // println(s"got $a")
-            // println()
-
-            val b = a.filter(_.nonEmpty).flatten.toList
-
-            if b.isEmpty then None
-            else Some(b.sum)
 
     def part1(lines: List[String]): Long =
         lines
