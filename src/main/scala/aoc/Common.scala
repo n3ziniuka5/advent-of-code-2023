@@ -47,6 +47,8 @@ case class Map2d[V](underlying: Map[Point, V]):
 
     def apply(k: Point): V = underlying(k)
 
+    def get(k: Point): Option[V] = underlying.get(k)
+
 object Map2d:
     def fromLines(lines: List[String]): Map2d[Char] =
         val underlying = lines.zipWithIndex.flatMap { (line, y) =>
