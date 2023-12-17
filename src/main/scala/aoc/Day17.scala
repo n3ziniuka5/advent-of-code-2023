@@ -15,8 +15,7 @@ object Day17:
 
     case class SearchStateKey(
         currentPos: Point,
-        previousPos: Point,
-        totalHeatLoss: Long,
+        previousPos: Point
     )
     case class SearchState(
         currentPos: Point,
@@ -26,7 +25,7 @@ object Day17:
         targetX: Int,
         targetY: Int
     ):
-        def toKey = SearchStateKey(currentPos, previousPos, totalHeatLoss)
+        def toKey = SearchStateKey(currentPos, previousPos)
 
     object SearchState:
         given Ordering[SearchState] = Ordering.by { s =>
@@ -384,7 +383,16 @@ object Day17:
             solve2(searches, map2d, visited + (head.toKey -> (head.movesInSameDirection, head.totalHeatLoss)))
 
     def part1(lines: List[String]): Long =
-        0
+        val map = Map2d.fromLines(lines).map { case (k, v) =>
+            k -> v.toString.toInt
+        }
+
+        val startingPoint = Point(0, 0)
+        val pq = mutable.PriorityQueue[SearchState](
+          SearchState(startingPoint, startingPoint.left, 0, 0, map.maxX, map.maxY)
+        )
+
+        solve(pq, map, Map.empty)
 
     def part2(lines: List[String]): Long =
         val map = Map2d.fromLines(lines).map { case (k, v) =>
