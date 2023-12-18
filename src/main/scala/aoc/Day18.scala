@@ -33,16 +33,16 @@ object Day18:
         }
 
     @tailrec
-    def solve(instructions: List[Instruction], rightOffstet: Long, count: Long): Long =
+    def solve(instructions: List[Instruction], rightOffset: Long, count: Long): Long =
         if (instructions.isEmpty) count + 1
         else
             val head = instructions.head
 
             val (newOffset, newCount) = head.direction match
-                case 'R' => (rightOffstet + head.count, count)
-                case 'L' => (rightOffstet - head.count, count + head.count)
-                case 'U' => (rightOffstet, count - (head.count * (rightOffstet - 1)))
+                case 'R' => (rightOffset + head.count, count)
+                case 'L' => (rightOffset - head.count, count + head.count)
+                case 'U' => (rightOffset, count - (head.count * (rightOffset - 1)))
                 case 'D' =>
-                    (rightOffstet, count + (head.count * rightOffstet))
+                    (rightOffset, count + (head.count * rightOffset))
 
             solve(instructions.tail, newOffset, newCount)
