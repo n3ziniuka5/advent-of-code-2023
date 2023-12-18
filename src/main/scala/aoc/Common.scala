@@ -61,14 +61,26 @@ object Map2DVec:
         Map2DVec(underlying)
 
 case class Map2d[V](underlying: Map[Point, V]):
-    lazy val maxX = underlying.keys.map(_.x).max
-    lazy val maxY = underlying.keys.map(_.y).max
+    lazy val maxX = underlying.keys.maxBy(_.x).x
+    lazy val minX = underlying.keys.minBy(_.x).x
+    lazy val maxY = underlying.keys.maxBy(_.y).y
+    lazy val minY = underlying.keys.minBy(_.y).y
 
     def map[V2](f: ((Point, V)) => (Point, V2)): Map2d[V2] = Map2d(underlying.map(f))
 
     def apply(k: Point): V = underlying(k)
 
     def get(k: Point): Option[V] = underlying.get(k)
+
+    override def toString: String =
+        (for {
+            y <- minY to maxY
+            x <- minX to maxX
+        } yield {
+            val point = Point(x, y)
+            if (underlying.contains(point)) underlying(point)
+            else '.'
+        }).grouped((maxX - minX) + 1).map(_.mkString).mkString("\n")
 
 object Map2d:
     def fromLines(lines: List[String]): Map2d[Char] =
