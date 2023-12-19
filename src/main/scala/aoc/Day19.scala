@@ -21,6 +21,9 @@ object Day19:
         case class Comparison(opPart1: Part => Boolean, opPart2: Long => Boolean, workflow: String, selector: Char)
             extends Rule
 
+    case class Range(from: Long, to: Long)
+    case class Search(x: Range, m: Range, a: Range, s: Range, workflow: String)
+
     def part1(lines: List[String]): Long =
         val (parts, workflows) = parse(lines)
         parts
@@ -58,17 +61,12 @@ object Day19:
                                 else if (s.startsWith("m")) _.m
                                 else if (s.startsWith("a")) _.a
                                 else _.s
+                            val valueStr = s.drop(2).takeWhile(_.isDigit)
+                            val value    = valueStr.toLong
+                            val workflow = s.drop(3 + valueStr.length)
                             s(1) match {
-                                case '<' =>
-                                    val valueStr = s.drop(2).takeWhile(_.isDigit)
-                                    val value    = valueStr.toLong
-                                    val workflow = s.drop(3 + valueStr.length)
-                                    Rule.Comparison(selector(_) < value, _ < value, workflow, s.head)
-                                case '>' =>
-                                    val valueStr = s.drop(2).takeWhile(_.isDigit)
-                                    val value    = valueStr.toLong
-                                    val workflow = s.drop(3 + valueStr.length)
-                                    Rule.Comparison(selector(_) > value, _ > value, workflow, s.head)
+                                case '<' => Rule.Comparison(selector(_) < value, _ < value, workflow, s.head)
+                                case '>' => Rule.Comparison(selector(_) > value, _ > value, workflow, s.head)
                             }
                         } else if (s == "R") {
                             Rule.Rejected
@@ -80,17 +78,7 @@ object Day19:
                     }
                     .toList
 
-                if (
-                  rules.forall {
-                      case Rule.Accepted                 => true
-                      case Rule.Comparison(_, _, "A", _) => true
-                      case _                             => false
-                  }
-                ) {
-                    workflowName -> List(Rule.Accepted)
-                } else {
-                    workflowName -> rules
-                }
+                workflowName -> rules
         }
 
         val workflows =
@@ -124,9 +112,6 @@ object Day19:
             case Rule.Comparison(_, _, workflow, _) => runWorkflow(part, workflow, workflows)
         }
 
-    case class Range(from: Long, to: Long)
-    case class Search(x: Range, m: Range, a: Range, s: Range, workflow: String)
-
     @tailrec
     def allAcceptedRanges(
         searches: List[Search],
@@ -139,18 +124,18 @@ object Day19:
             val head  = searches.head
             val rules = workflows(head.workflow)
 
+            def selector(selectorChar: Char): (Search => Range) =
+                if (selectorChar == 'x') _.x
+                else if (selectorChar == 'm') _.m
+                else if (selectorChar == 'a') _.a
+                else _.s
+
             val matchedRule = rules.find {
                 case Rule.Accepted                  => true
                 case Rule.Rejected                  => true
                 case Rule.ToOtherWorkflow(workflow) => true
                 case Rule.Comparison(_, op, workflow, selectorChar) =>
-                    val selector: (Search => Range) =
-                        if (selectorChar == 'x') _.x
-                        else if (selectorChar == 'm') _.m
-                        else if (selectorChar == 'a') _.a
-                        else _.s
-
-                    (selector(head).from to selector(head).to).exists(op(_))
+                    (selector(selectorChar)(head).from to selector(selectorChar)(head).to).exists(op(_))
 
             }.get
 
@@ -161,13 +146,7 @@ object Day19:
                     val newSearch = head.copy(workflow = workflow)
                     allAcceptedRanges(newSearch +: searches.tail, answers, workflows)
                 case Rule.Comparison(_, op, workflow, selectorChar) =>
-                    val selector: (Search => Range) =
-                        if (selectorChar == 'x') _.x
-                        else if (selectorChar == 'm') _.m
-                        else if (selectorChar == 'a') _.a
-                        else _.s
-
-                    val allValues = (selector(head).from to selector(head).to).map(op(_))
+                    val allValues = (selector(selectorChar)(head).from to selector(selectorChar)(head).to).map(op(_))
                     val splitAt   = (1 until allValues.size).find(i => allValues(i - 1) != allValues(i))
 
                     splitAt match
@@ -179,7 +158,7 @@ object Day19:
                                 List(
                                   Range(range.from, range.from + i - 1),
                                   Range(range.from + i, range.to),
-                                ).filter(r => r.from <= r.to)
+                                )
 
                             val newSearches = if (selectorChar == 'x') newRange(head.x).map { r => head.copy(x = r) }
                             else if (selectorChar == 'm') newRange(head.m).map { r => head.copy(m = r) }
