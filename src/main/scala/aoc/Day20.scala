@@ -27,7 +27,8 @@ object Day20:
         solve(1000, state, connections, 0, 0)
 
     def part2(lines: List[String]): Long =
-        0
+        val (connections, state) = parse(lines)
+        solve(Long.MaxValue, state, connections, 0, 0)
 
     def parse(lines: List[String]): (Map[String, List[String]], Map[String, ModuleState]) =
         val connections = lines.map { case s"$from -> $to" =>
@@ -45,19 +46,9 @@ object Day20:
             else None
         }.toMap
 
-        /*val withConjunctionInputs = state.map { case (name, state) =>
-            state match
-                case Conjuction(inputs) =>
-                    val newInputs = inputs.map((name, _))
-                    name -> Conjuction(newInputs)
-                case _ => name -> state
-        }*/
-
-        // println(connections)
-        // println(state)
-        // println()
-
         (connections, state)
+
+    var presses: Long = 0
 
     @tailrec
     def solve(
@@ -73,8 +64,11 @@ object Day20:
         else
             val (newState, addedLow, addedHigh) =
                 // println("PRESSING BUTTON")
+                presses += 1
                 pressButton(Queue(("button", "broadcaster", Pulse.Low)), state, connections, 0, 0)
             solve(n - 1, newState, connections, lowPulses + addedLow, highPulses + addedHigh)
+
+    val m = collection.mutable.Map.empty[String, Long]
 
     @tailrec
     def pressButton(
@@ -93,6 +87,21 @@ object Day20:
             case None                            => (state, lowPulses, highPulses)
             case Some(((from, to, pulse), rest)) =>
                 // println(s"from \"$from\" $pulse \"$to\" ")
+
+                val inputsOfInterest = List("vg", "nb", "vc", "ls")
+                if inputsOfInterest.contains(from) && pulse == Pulse.High then
+                    if !m.contains(from) then
+                        m.update(from, presses)
+
+                        if inputsOfInterest.forall(m.contains) then
+
+                            def gcd(a: Long, b: Long): Long = if (b == 0) a else gcd(b, a % b)
+                            def lcm(a: Long, b: Long): Long = a * b / gcd(a, b)
+
+                            println(m.values.reduce(lcm))
+
+                            System.exit(0)
+                    else ()
 
                 state.get(to) match
                     case Some(ModuleState.Broadcaster) =>
