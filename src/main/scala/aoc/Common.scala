@@ -39,12 +39,16 @@ case class Point(x: Int, y: Int):
     def inBounds(map: Map2d[_]): Boolean =
         x >= 0 && x <= map.maxX && y >= 0 && y <= map.maxY
 
+    def inBounds(map: Map2DVec[_]): Boolean =
+        x >= 0 && x <= map.maxX && y >= 0 && y <= map.maxY
+
 case class Map2DVec[V](underlying: Vector[Vector[V]]):
     val maxX = underlying.size - 1
     val maxY = underlying.head.size - 1
 
     def apply(x: Int): Vector[V] = underlying(x)
     def apply(x: Int, y: Int): V = underlying(x)(y)
+    def apply(point: Point): V = underlying(point.x)(point.y)
 
     def transpose: Map2DVec[V] = Map2DVec(underlying.transpose)
 
