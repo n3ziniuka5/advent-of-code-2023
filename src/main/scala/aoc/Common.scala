@@ -48,7 +48,7 @@ case class Map2DVec[V](underlying: Vector[Vector[V]]):
 
     def apply(x: Int): Vector[V] = underlying(x)
     def apply(x: Int, y: Int): V = underlying(x)(y)
-    def apply(point: Point): V = underlying(point.x)(point.y)
+    def apply(point: Point): V   = underlying(point.x)(point.y)
 
     def transpose: Map2DVec[V] = Map2DVec(underlying.transpose)
 
